@@ -7,6 +7,9 @@ The MATLAB code is the implementation of the next two journal publications:
 
 2. T. Jerman and F. Pernus and B. Likar and Z. Spiclin, "*Blob Enhancement and Visualization for Improved Intracranial Aneurysm Detection*", IEEE Transactions on Visualization and Computer Graphics, 22(6), p. 1705-1717 (2016), doi={10.1109/TVCG.2015.2446493}
 
+and next conference paper (please refer to the journal publication [1] for more details):
+
+3. Jerman and F. Pernus and B. Likar and Z. Spiclin, "*Beyond Frangi: an improved multiscale vesselness filter*", Proc. SPIE 9413, Medical Imaging 2015: Image Processing, 94132A (2015), doi={10.1117/12.2081147} 
 
 The code is based on Dirk-Jan Kroon's implementation of Frangi's vesselness filter. (https://www.mathworks.com/matlabcentral/fileexchange/24409-hessian-based-frangi-vesselness-filter)
 
