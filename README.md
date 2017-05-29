@@ -20,3 +20,23 @@ The code is based on Dirk-Jan Kroon's implementation of Frangi's vesselness filt
 * The 3D method contains a c-code file that needs to be compiled with "mex eig3volume.c". (For more info visit: https://www.mathworks.com/matlabcentral/fileexchange/24409-hessian-based-frangi-vesselness-filter)
 
 * Threshold the filter response to remove any remaining enhanced noise
+
+### Content:
+
+* 2D enhancement of vessel/tube-like structures:
+ * vesselness2D.m - main function
+ * example_vesselness2D.m - filter applied on a 2D retinal vasculature
+ * fundus2D.png - image for the example
+ 
+* 3D enhancement of vessel/tube-like structures:
+ * vesselness3D.m - main function
+ * eig3volume.c - fast computation of eigenvalues
+ * example_vesselness3D.m - filter applied on a 3D cerebral vasculature
+ * volume.mat - volume for the example
+ 
+* 3D enhancement of blob/sphere-like structures:
+ * blobness3D.m - main function
+ * eig3volume.c - (as above)
+ * example_blobness3D.m - aneurysm enhancement in a 3D cerebral vasculature
+ * volume.mat - (as above)
+  
