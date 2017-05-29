@@ -1,5 +1,5 @@
 # Jerman Enhancement Filter
-Jerman's 3D and 2D Hessian based tubular (vessel/vesselness) and spherical (blob) enhancement filters.
+Jerman's 3D and 2D Hessian based tubular (vessel/vesselness) and spherical (blob/blobness) enhancement filters.
 
 The MATLAB code is the implementation of the next two journal publications:
 
@@ -18,3 +18,5 @@ The code is based on Dirk-Jan Kroon's implementation of Frangi's vesselness filt
 * Make sure that the objects of interest have the highest (if bright compared to the background) or lowest (if dark compared to background) intensities in the image/volume. Scale/normalize the images appropriately.
 
 * The 3D method contains a c-code file that needs to be compiled with "mex eig3volume.c". (For more info visit: https://www.mathworks.com/matlabcentral/fileexchange/24409-hessian-based-frangi-vesselness-filter)
+
+* Threshold the filter response to remove any remaining enhanced noise
