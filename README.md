@@ -23,18 +23,18 @@ The code is based on Dirk-Jan Kroon's implementation of Frangi's vesselness filt
 
 ### Content:
 
-* 2D enhancement of vessel/tube-like structures:
+1. 2D enhancement of vessel/tube-like structures:
  * vesselness2D.m - main function
  * example_vesselness2D.m - filter applied on a 2D retinal vasculature
  * fundus2D.png - image for the example
  
-* 3D enhancement of vessel/tube-like structures:
+2. 3D enhancement of vessel/tube-like structures:
  * vesselness3D.m - main function
  * eig3volume.c - fast computation of eigenvalues
  * example_vesselness3D.m - filter applied on a 3D cerebral vasculature
  * volume.mat - volume for the example
  
-* 3D enhancement of blob/sphere-like structures:
+3. 3D enhancement of blob/sphere-like structures:
  * blobness3D.m - main function
  * eig3volume.c - (as above)
  * example_blobness3D.m - aneurysm enhancement in a 3D cerebral vasculature
