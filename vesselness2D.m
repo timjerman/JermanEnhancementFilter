@@ -1,8 +1,8 @@
-function vesselness = vesselness2D(I, sigmas, spacing, tau, whiteondark)
+function vesselness = vesselness2D(I, sigmas, spacing, tau, brightondark)
 % calculates the vesselness probability map (local tubularity) of a 2D
 % input image
 % 
-% vesselness = vesselness2D(I, sigmas, spacing, tau, whiteondark)
+% vesselness = vesselness2D(I, sigmas, spacing, tau, brightondark)
 % 
 % inputs,
 %   I : 2D image
@@ -13,7 +13,7 @@ function vesselness = vesselness2D(I, sigmas, spacing, tau, whiteondark)
 %       dimensions 
 %   tau : (between 0.5 and 1) : parameter that controls response uniformity
 %       - lower tau -> more intense output response            
-%   whiteondark: (true/false) : are vessels (tubular structures) bright on 
+%   brightondark: (true/false) : are vessels (tubular structures) bright on 
 %       dark background or dark on bright (default for 2D is false)
 %
 % outputs,
@@ -28,7 +28,7 @@ function vesselness = vesselness2D(I, sigmas, spacing, tau, whiteondark)
 verbose = 1;
 
 if nargin<5
-    whiteondark = false; % default mode for 2D is dark vessels compared to the background
+    brightondark = false; % default mode for 2D is dark vessels compared to the background
 end
 
 I = single(I);
@@ -39,16 +39,23 @@ for j = 1:length(sigmas)
         disp(['Current filter scale (sigma): ' num2str(sigmas(j)) ]);
     end
     
-    [~, Lambda2] = imageEigenvalues(I,sigmas(j),spacing,whiteondark); 
+    [~, Lambda2] = imageEigenvalues(I,sigmas(j),spacing,brightondark); 
+    if brightondark == true
+        Lambda2 = -Lambda2;
+    end  
     
-    % filter response at current scale
+    % proposed filter at current scale
     Lambda3 = Lambda2;
-    Lambda3(Lambda3<0 & Lambda3 >= tau .* min(Lambda3(:)))=tau .* min(Lambda3(:));
-    response = (abs(Lambda2).*abs(Lambda2).*abs(Lambda3-Lambda2)).* 27 ./ (2.*abs(Lambda2)+abs(Lambda3-Lambda2)).^3;    
-    response(Lambda2<Lambda3./2)=1;    
-    response(Lambda2>=0) = 0;     
-    response(~isfinite(response)) = 0;
-
+    
+    Lambda_rho = Lambda3;
+    Lambda_rho(Lambda3 > 0 & Lambda3 <= tau .* max(Lambda3(:))) = tau .* max(Lambda3(:));
+    Lambda_rho(Lambda3 <= 0) = 0;
+    response = Lambda2.*Lambda2.*(Lambda_rho-Lambda2).* 27 ./ (Lambda2 + Lambda_rho).^3;    
+    
+    response(Lambda2 >= Lambda_rho./2 & Lambda_rho > 0) = 1;    
+    response(Lambda2 <= 0 | Lambda_rho <= 0) = 0;
+    response(~isfinite(response)) = 0;   
+    
     %max response over multiple scales
     if(j==1)
         vesselness = response;
@@ -62,7 +69,7 @@ end
 vesselness = vesselness ./ max(vesselness(:)); % should not be really needed   
 vesselness(vesselness < 1e-2) = 0;
 
-function [Lambda1, Lambda2] = imageEigenvalues(I,sigma,spacing,whiteondark)
+function [Lambda1, Lambda2] = imageEigenvalues(I,sigma,spacing,brightondark)
 % calculates the two eigenvalues for each voxel in a volume
 
 % Calculate the 2D hessian
@@ -74,14 +81,6 @@ Hxx = c*Hxx;
 Hxy = c*Hxy;
 Hyy = c*Hyy;
 
-% correct sign based on brightness of structuress
-if whiteondark == false
-    c=-1;
-    Hxx = c*Hxx; 
-    Hxy = c*Hxy;
-    Hyy = c*Hyy;   
-end
-
 % reduce computation by computing vesselness only where needed
 % S.-F. Yang and C.-H. Cheng, “Fast computation of Hessian-based
 % enhancement filters for medical images,” Comput. Meth. Prog. Bio., vol.
@@ -90,8 +89,14 @@ B1 = - (Hxx+Hyy);
 B2 = Hxx .* Hyy - Hxy.^2;
 
 T = ones(size(B1));
-T(B1<0) = 0;
-T(B2==0 & B1 == 0) = 0;
+
+if brightondark == true
+    T(B1<0) = 0;
+    T(B2==0 & B1 == 0) = 0;
+else
+    T(B1>0) = 0;
+    T(B2==0 & B1 == 0) = 0;
+end
 
 clear B1 B2;
 

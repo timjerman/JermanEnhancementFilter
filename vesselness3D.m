@@ -1,8 +1,8 @@
-function vesselness = vesselness3D(I, sigmas, spacing, tau, whiteondark)
+function vesselness = vesselness3D(I, sigmas, spacing, tau, brightondark)
 % calculates vesselness probability map (local tubularity) of a 3D input 
 % image
 % 
-% vesselness = vesselness3D(V, sigmas, spacing, tau, whiteondark)
+% vesselness = vesselness3D(V, sigmas, spacing, tau, brightondark)
 % 
 % inputs,
 %   I : 3D image
@@ -13,7 +13,7 @@ function vesselness = vesselness3D(I, sigmas, spacing, tau, whiteondark)
 %       dimensions 
 %   tau : (between 0.5 and 1) : parameter that controls response uniformity
 %       - lower tau -> more intense output response            
-%   whiteondark: (true/false) : are vessels (tubular structures) bright on 
+%   brightondark: (true/false) : are vessels (tubular structures) bright on 
 %       dark background or dark on bright (default for 3D is true)
 %
 % outputs,
@@ -28,7 +28,7 @@ function vesselness = vesselness3D(I, sigmas, spacing, tau, whiteondark)
 verbose = 1;
 
 if nargin<5
-    whiteondark = true; % default
+    brightondark = true; % default
 end
 
 I(~isfinite(I)) = 0;
@@ -40,17 +40,20 @@ for j = 1:length(sigmas)
         disp(['Current Filter Sigma: ' num2str(sigmas(j)) ]);
     end
     
-    [~, Lambda2, Lambda3] = volumeEigenvalues(I,sigmas(j),spacing,whiteondark);
+    [~, Lambda2, Lambda3] = volumeEigenvalues(I,sigmas(j),spacing,brightondark);
+    if brightondark == true
+        Lambda2 = -Lambda2;
+        Lambda3 = -Lambda3;
+    end
     
-    % proposed filter    
-    Lambda3M = Lambda3;
-    Lambda3M(Lambda3<0 & Lambda3 >= tau .* min(Lambda3(:)))=tau .* min(Lambda3(:));
-    response = (abs(Lambda2).*abs(Lambda2).*abs(Lambda3M-Lambda2)).* 27 ./ (2.*abs(Lambda2)+abs(Lambda3M-Lambda2)).^3;
+    % proposed filter      
+    Lambda_rho = Lambda3;
+    Lambda_rho(Lambda3 > 0 & Lambda3 <= tau .* max(Lambda3(:))) = tau .* max(Lambda3(:));
+    Lambda_rho(Lambda3 <= 0) = 0;
+    response = Lambda2.*Lambda2.*(Lambda_rho-Lambda2).* 27 ./ (Lambda2 + Lambda_rho).^3;    
     
-    response(Lambda2<Lambda3M./2)=1;
-    
-    response(Lambda2>=0) = 0;
-    response(Lambda3>=0) = 0;        
+    response(Lambda2 >= Lambda_rho./2 & Lambda_rho > 0) = 1;    
+    response(Lambda2 <= 0 | Lambda_rho <= 0) = 0;
     response(~isfinite(response)) = 0;
 
     %keep max response
@@ -68,7 +71,7 @@ vesselness = vesselness ./ max(vesselness(:));
 vesselness(vesselness < 1e-2) = 0;    
 
 
-function [Lambda1, Lambda2, Lambda3] = volumeEigenvalues(V,sigma,spacing,whiteondark)
+function [Lambda1, Lambda2, Lambda3] = volumeEigenvalues(V,sigma,spacing,brightondark)
 % calculates the three eigenvalues for each voxel in a volume
 
 % Calculate 3D hessian
@@ -80,13 +83,6 @@ Hxx = c*Hxx; Hxy = c*Hxy;
 Hxz = c*Hxz; Hyy = c*Hyy;
 Hyz = c*Hyz; Hzz = c*Hzz;
 
-if whiteondark == false
-    c=-1;
-    Hxx = c*Hxx; Hxy = c*Hxy;
-    Hxz = c*Hxz; Hyy = c*Hyy;
-    Hyz = c*Hyz; Hzz = c*Hzz;    
-end
-
 % reduce computation by computing vesselness only where needed
 % S.-F. Yang and C.-H. Cheng, “Fast computation of Hessian-based
 % enhancement filters for medical images,” Comput. Meth. Prog. Bio., vol.
@@ -96,10 +92,16 @@ B2 = Hxx .* Hyy + Hxx .* Hzz + Hyy .* Hzz - Hxy .* Hxy - Hxz .* Hxz - Hyz .* Hyz
 B3 = Hxx .* Hyz .* Hyz + Hxy .* Hxy .* Hzz + Hxz .* Hyy .* Hxz - Hxx .* Hyy .* Hzz - Hxy .* Hyz .* Hxz - Hxz .* Hxy .* Hyz;
 
 T = ones(size(B1));
-T(B1<=0) = 0;
-T(B2<=0 & B3 == 0) = 0;
-T(B1>0 & B2>0 & B1 .* B2 < B3) = 0;
 
+if brightondark == true
+    T(B1<=0) = 0;
+    T(B2<=0 & B3 == 0) = 0;
+    T(B1>0 & B2>0 & B1 .* B2 < B3) = 0;
+else
+    T(B1>=0) = 0;
+    T(B2>=0 & B3 == 0) = 0;
+    T(B1<0 & B2<0 & (-B1) .* (-B2) < (-B3)) = 0;
+end
 clear B1 B2 B3;
 
 indeces = find(T==1);
