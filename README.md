@@ -42,4 +42,10 @@ The code is based on Dirk-Jan Kroon's implementation of Frangi's vesselness filt
  * eig3volume.c - (as above)
  * example_blobness3D.m - aneurysm enhancement in a 3D cerebral vasculature
  * volume.mat - (as above)
+ 
+ 2D enhancement of blob/disk-like structures (**experimental - not published**):
+
+ * blobness2D.m - main function
+ * example_blobness2D.m - enhancement of an aneurysm on a vessel (*synthetically generated image*)
+ * blob2D.png - image for the example
   
